@@ -1,8 +1,11 @@
 use bevy::prelude::*;
 
-//use crate::deck;
+use super::structs::game::Game;
 
 pub struct DeckPlugin;
+
+const CARD_SIZE: f32 = 100.0;
+const CARD_SIZE_RATIO: f32 = 1.5;
 
 impl Plugin for DeckPlugin {
     fn build(&self, app: &mut App) {
@@ -14,17 +17,28 @@ impl Plugin for DeckPlugin {
 
 fn setup_deck(
     mut commands: Commands,
+    mut game: ResMut<Game>,
     /*mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,*/
 ) {
-    commands.spawn_bundle(SpriteBundle {
-        sprite: Sprite {
-            color: Color::rgb(0.25, 0.25, 0.75),
-            custom_size: Some(Vec2::new(50.0, 100.0)),
+    game.draw();
+
+    let mut idx = 0;
+    for card in game.hand.iter_mut() {
+        commands.spawn_bundle(SpriteBundle {
+            sprite: Sprite {
+                color: Color::rgb(0.25, 0.25, 0.75),
+                custom_size: Some(Vec2::new(CARD_SIZE, CARD_SIZE * CARD_SIZE_RATIO)),
+                ..default()
+            },
+            transform: Transform {
+                translation: Vec3::new(100.0 * CARD_SIZE, 0.0, 1.0),
+                ..default()
+            },
             ..default()
-        },
-        ..default()
-    });//.insert(deck::n);
+        }).insert(*card);
+        idx += 1;
+    }
 }
 /*
 // control the game character
