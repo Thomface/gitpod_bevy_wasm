@@ -12,6 +12,7 @@ pub enum Action {
 
 #[derive(Copy, Clone)]
 pub enum Target {
+    Player,
     All,
     SingleEnemy,
     AllEnemy,
@@ -68,24 +69,40 @@ impl Game {
                 self.hand.push(card);
             }
             _ => {
-                self.refill_draw();
-                self.draw();
+                if self.refill_draw() > 0 {
+                    self.draw();
+                }
             }
         }
     }
 
-    pub fn refill_draw(&mut self) {
+    pub fn refill_draw(&mut self) -> i32 {
+        let mut nb = 0;
         loop {
             match self.discard.pop() {
                 Some(card) => {
                     self.draw.push(card);
+                    nb += 1;
                 }
                 _ => break
             }
         }
+        return nb;
     }
 
     pub fn shuffle_draw(&mut self) {
         self.draw.shuffle(&mut thread_rng());
+    }
+}
+
+impl Default for Game {
+    fn default() -> Self {
+        let mut game = Game::new();
+
+        game.draw.push(Card::new(Action::Attack, Target::SingleEnemy, 6));
+        game.draw.push(Card::new(Action::Attack, Target::SingleEnemy, 6));
+        game.draw.push(Card::new(Action::Defend, Target::Player, 5));
+        game.draw.push(Card::new(Action::Defend, Target::Player, 5));
+        return game;
     }
 }

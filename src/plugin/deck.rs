@@ -21,23 +21,48 @@ fn setup_deck(
     /*mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,*/
 ) {
+    commands.spawn_bundle(SpriteBundle {
+        sprite: Sprite {
+            color: Color::rgb(0.50, 0.25, 0.75),
+            custom_size: Some(Vec2::new(CARD_SIZE, CARD_SIZE * CARD_SIZE_RATIO)),
+            ..default()
+        },
+        transform: Transform {
+            translation: Vec3::new(-1.0, 0.0, 1.0),
+            ..default()
+        },
+        ..default()
+    });//TODO create a draw component .insert(*card);
+
+    commands.spawn_bundle(SpriteBundle {
+        sprite: Sprite {
+            color: Color::rgb(0.50, 0.25, 0.75),
+            custom_size: Some(Vec2::new(CARD_SIZE, CARD_SIZE * CARD_SIZE_RATIO)),
+            ..default()
+        },
+        transform: Transform {
+            translation: Vec3::new(3.0, 1.0, 2.0),
+            ..default()
+        },
+        ..default()
+    });//TODO create a discard component .insert(*card);
+
+    game.draw();
     game.draw();
 
-    let mut idx = 0;
-    for card in game.hand.iter_mut() {
+    for (i, card) in game.hand.iter().enumerate() {
         commands.spawn_bundle(SpriteBundle {
             sprite: Sprite {
-                color: Color::rgb(0.25, 0.25, 0.75),
+                color: Color::rgb(0.50, 0.25, 0.75),
                 custom_size: Some(Vec2::new(CARD_SIZE, CARD_SIZE * CARD_SIZE_RATIO)),
                 ..default()
             },
             transform: Transform {
-                translation: Vec3::new(100.0 * CARD_SIZE, 0.0, 1.0),
+                translation: Vec3::new(300.0, 0.0, 0.0) + Vec3::new(i as f32 * CARD_SIZE, 0.0, 1.0),
                 ..default()
             },
             ..default()
         }).insert(*card);
-        idx += 1;
     }
 }
 /*
