@@ -2,10 +2,23 @@ use bevy::prelude::*;
 
 use super::structs::game::Game;
 
+use super::bevy_interact_2d;
+#[cfg(feature = "debug")]
+use bevy_interact_2d::InteractionDebugPlugin as InteractionPlugin;
+#[cfg(not(feature = "debug"))]
+use bevy_interact_2d::InteractionPlugin;
+use bevy_interact_2d::{
+  drag::{DragPlugin, Draggable, Dragged, DropStrategy},
+  Group, Interactable, InteractionSource, InteractionState,
+};
+
 pub struct DeckPlugin;
 
 const CARD_SIZE: f32 = 100.0;
 const CARD_SIZE_RATIO: f32 = 1.5;
+
+pub const CARD_IN_HAND: u8 = 0;
+pub const ENEMI: u8 = 1;
 
 impl Plugin for DeckPlugin {
     fn build(&self, app: &mut App) {
@@ -62,69 +75,16 @@ fn setup_deck(
                 ..default()
             },
             ..default()
-        }).insert(*card);
+        }).insert(Interactable {
+            groups: vec![Group(CARD_IN_HAND)],
+            bounding_box: (Vec2::new(-12., -12.), Vec2::new(12., 12.)),
+            ..Default::default()
+        })        
+        .insert(Draggable {
+            groups: vec![Group(CARD_IN_HAND)],
+            hook: None,
+            drop_strategy: DropStrategy::Reset
+        });
+        //.insert(*card);
     }
 }
-/*
-// control the game character
-fn move_player(
-    mut animation_player: Query<&mut AnimationPlayer>,
-    model_assets: Res<ModelAssets>,
-    assets_gltf: Res<Assets<Gltf>>,
-    keyboard_input: Res<Input<KeyCode>>,
-    mut query: Query<(&mut Transform, &mut Player)>,
-) {
-    for (mut transform, mut player) in query.iter_mut() {
-        let mut moving = false;
-        let mut rotation = 0.0;
-        if keyboard_input.pressed(KeyCode::Up) {
-            if player.x < BOARD_SIZE as f32 - 1.0 {
-                player.x += 0.1;
-            }
-            rotation = std::f32::consts::FRAC_PI_2;
-            moving = true;
-        }
-        if keyboard_input.pressed(KeyCode::Down) {
-            if player.x > 0.0 {
-                player.x -= 0.1;
-            }
-            rotation = -std::f32::consts::FRAC_PI_2;
-            moving = true;
-        }
-        if keyboard_input.pressed(KeyCode::Right) {
-            if player.z < BOARD_SIZE as f32 - 1.0 {
-                player.z += 0.1;
-            }
-            rotation = 0.0;
-            moving = true;
-        }
-        if keyboard_input.pressed(KeyCode::Left) {
-            if player.z > 0.0 {
-                player.z -= 0.1;
-            }
-            rotation = std::f32::consts::PI;
-            moving = true;
-        }
-
-        // move on the board
-        if let Ok(mut my_animation_player) = animation_player.get_single_mut() {
-            if let Some(gltf) = assets_gltf.get(&model_assets.robot) {
-                if moving {
-                    if !player.walking {
-                        my_animation_player
-                            .play(gltf.named_animations["Robot_Walking"].clone())
-                            .set_speed(2.0)
-                            .repeat();
-                        player.walking = true;
-                    }
-                    transform.translation = Vec3::new(player.x, player.y, player.z);
-                    transform.rotation = Quat::from_rotation_y(rotation);
-                } else {
-                    player.walking = false;
-                    my_animation_player.play(gltf.named_animations["Robot_Idle"].clone()).repeat();
-                }
-            }
-        }
-    }
-}
-*/
