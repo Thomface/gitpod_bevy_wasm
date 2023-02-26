@@ -36,9 +36,10 @@ fn main() {
         .add_plugin(TowerPlugin)
         .add_plugin(BulletPlugin)
         .add_plugin(TargetPlugin)
+        .add_startup_system_to_stage(StartupStage::PreStartup, asset_loading)
         .add_startup_system(spawn_basic_scene)
-        .add_startup_system(spawn_camera)
-        .add_startup_system(asset_loading)
+        .add_startup_system(spawn_camera)        
+        .add_system(camera_controls)
         .run();
 }
 
@@ -46,6 +47,7 @@ fn spawn_basic_scene(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    assets: Res<GameAssets>,
 ) {
     commands
         .spawn(PbrBundle {
@@ -56,11 +58,10 @@ fn spawn_basic_scene(
         .insert(Name::new("Ground"));
 
     commands
-        .spawn(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
-            material: materials.add(Color::rgb(0.67, 0.84, 0.92).into()),
+        .spawn(SceneBundle{
+            scene: assets.gun_cannon_turret.clone(),
             transform: Transform::from_xyz(0.0, 0.5, 0.0),
-            ..default()
+            ..Default::default()
         })
         .insert(Tower {
             shooting_timer: Timer::from_seconds(1.0, TimerMode::Repeating),
@@ -99,13 +100,54 @@ fn spawn_camera(mut commands: Commands) {
     });
 }
 
-fn asset_loading(mut commands: Commands, assets: Res<AssetServer>) {
-    commands.insert_resource(GameAssets {
-        bullet_scene: assets.load("Bullet.glb#Scene0"),
-    });
-}
-
 #[derive(Resource)]
 pub struct GameAssets {
     bullet_scene: Handle<Scene>,
+    gun_cannon_turret: Handle<Scene>,
+}
+
+fn asset_loading(mut commands: Commands, assets: Res<AssetServer>) {
+    commands.insert_resource(GameAssets {
+        bullet_scene: assets.load("Bullet.glb#Scene0"),
+        gun_cannon_turret: assets.load("GunCannonTurret.glb#Scene0")
+    });
+}
+
+fn camera_controls(
+    keyboard: Res<Input<KeyCode>>,
+    mut camera_query: Query<&mut Transform, With<Camera3d>>,
+    time: Res<Time>,
+) {
+    let mut camera = camera_query.single_mut();
+
+    // ensure a constant height from the ground
+    let mut forward = camera.forward();
+    forward.y = 0.0;
+    forward = forward.normalize();
+
+    let mut left = camera.left();
+    left.y = 0.0;
+    left = left.normalize();
+
+    let speed = 3.0;
+    let rotate_speed = 0.3;
+    //Leafwing
+    if keyboard.pressed(KeyCode::W) {
+        camera.translation += forward * time.delta_seconds() * speed;
+    }
+    if keyboard.pressed(KeyCode::S) {
+        camera.translation -= forward * time.delta_seconds() * speed;
+    }
+    if keyboard.pressed(KeyCode::A) {
+        camera.translation += left * time.delta_seconds() * speed;
+    }
+    if keyboard.pressed(KeyCode::D) {
+        camera.translation -= left * time.delta_seconds() * speed;
+    }
+    if keyboard.pressed(KeyCode::Q) {
+        camera.rotate_axis(Vec3::Y, rotate_speed * time.delta_seconds())
+    }
+    if keyboard.pressed(KeyCode::E) {
+        camera.rotate_axis(Vec3::Y, -rotate_speed * time.delta_seconds())
+    }
 }
